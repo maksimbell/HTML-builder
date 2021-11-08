@@ -19,9 +19,13 @@ console.log('Hello! Enter text:');
 
 myReadLine.on('line', (input) => {
     if (input == 'exit') {
-        console.log('\nBye, bye!');
+        //console.log('\nBye, bye!');
         myReadLine.close();
     } else {
         myWriteStream.write(input + '\n');
     }
+});
+
+process.on('exit', (code) => {
+    console.log('\nBye, bye!');
 });
