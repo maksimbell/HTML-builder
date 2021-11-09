@@ -14,23 +14,17 @@ function readSpecificFile(fileName) {
 
     fileReadStream.on('data', (chunk) => {
         lineReader.write(chunk);
-        lineReader.write('/n');
+        // lineReader.write('/n');
     });
 }
 
-fs.access(__dirname + newDir, function (error) {
-    if (error) {
-        fs.mkdir(newDir, function (err) {
-            if (err) {
-                //console.log(err)
-            } else {
-                console.log("New directory successfully created.")
-            }
-        });
+fs.mkdir(newDir, function (err) {
+    if (err) {
+        //console.log(err)
     } else {
-        console.log("Directory exists.")
+        console.log("New directory successfully created.")
     }
-})
+});
 
 const myWriteStream = fs.createWriteStream(__dirname + '/project-dist/index.html', 'utf8');
 
@@ -43,3 +37,77 @@ lineReader.on('line', function (line) {
         myWriteStream.write('\n');
     }
 });
+
+const stylesWriteStream = fs.createWriteStream(__dirname + '/project-dist/style.css', 'utf8');
+let stylesReadStream = null;
+
+fs.readdir(__dirname + '/styles', {
+    withFileTypes: true
+}, (error, files) => {
+    if (error) {
+        console.log('Error occured!');
+    } else {
+        files.forEach((file) => {
+            if (file.isFile()) {
+                fs.stat(__dirname + '/styles/' + file.name, (err, stats) => {
+                    let ext = path.extname(file.name);
+                    if (ext == '.css') {
+                        stylesReadStream = fs.createReadStream(__dirname + '/styles/' + file.name, 'utf8');
+
+                        stylesReadStream.on('data', (chunk) => {
+                            stylesWriteStream.write(chunk);
+                            // console.log(chunk);
+                        });
+                    }
+                });
+            }
+        })
+    }
+})
+
+fs.mkdir(newDir + '/assets', function (err) {
+    if (err) {
+        //console.log(err)
+    } else {
+        console.log("New directory successfully created.")
+    }
+});
+
+fs.readdir(__dirname + '/assets', {
+    withFileTypes: true
+}, (error, dirs) => {
+    if (error) {
+        console.log('Error occured!');
+    } else {
+        dirs.forEach((dir) => {
+            if (dir.isFile()) {
+                fs.mkdir(newDir + '/assets/' + dir.name, function (err) {
+                    if (err) {
+                        //console.log(err)
+                    } else {
+                        // console.log("New directory successfully created.")
+                    }
+                });
+            } else {
+                fs.readdir(__dirname + '/assets/' + dir.name, {
+                    withFileTypes: true
+                }, (error, files) => {
+                    if (error) {
+                        console.log('Error occured!');
+                    } else {
+                        files.forEach((file) => {
+                            fs.mkdir(newDir + '/assets/' + dir.name, function (err) {
+                                if (err) {
+                                    //console.log(err)
+                                } else {
+                                    // console.log("New directory successfully created.")
+                                }
+                            });
+                            fs.promises.copyFile(__dirname + '/assets/' + dir.name + '/' + file.name, newDir + '/assets/' + dir.name + '/' + file.name);
+                        })
+                    }
+                })
+            }
+        })
+    }
+})
